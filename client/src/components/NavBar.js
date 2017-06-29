@@ -1,34 +1,47 @@
 import React, { Component } from 'react'
 import { Menu } from 'semantic-ui-react'
-import { Link } from 'react-router-dom'
-import { connect } from 'react-redux';
-import { handleLogout } from '../actions/auth';
+import { connect } from 'react-redux'
+import { handleLogout } from '../actions/auth'
+import { withRouter, Link } from 'react-router-dom'
 
 class NavBar extends Component {
-  rightNavs = () => {
-    const { user, dispatch, history } = this.props;
-
+  rightNavItems = () => {
+    const { dispatch, user, location } = this.props;
     if(user.id) {
-      // The user is logged in
-      // only show the logout menu item
       return(
         <Menu.Menu position='right'>
-          <Menu.Item name='Logout' onClick={() => dispatch(handleLogout(history))} />
+          <Link to='/bio'>
+            <Menu.Item
+              name='bio'
+              id='bio'
+              active={location.pathname === '/bio'}
+            />
+          </Link>
+          <Menu.Item
+            name='logout'
+            onClick={() => dispatch(handleLogout(this.props.history))}
+          />
         </Menu.Menu>
-      );
+      )
     } else {
-      // The user logged out
-      // show the register and login items
       return(
         <Menu.Menu position='right'>
-          <Link to='/register'>
-            <Menu.Item name='Register' />
-          </Link>
           <Link to='/login'>
-            <Menu.Item name='Login' />
+            <Menu.Item
+              id='login'
+              name='login'
+              active={location.pathname === '/login'}
+            />
+          </Link>
+          <Link to='/register'>
+            <Menu.Item
+              id='register'
+              name='register'
+              active={location.pathname === '/register'}
+            />
           </Link>
         </Menu.Menu>
-      );
+      )
     }
   }
 
@@ -37,9 +50,13 @@ class NavBar extends Component {
       <div>
         <Menu pointing secondary>
           <Link to='/'>
-            <Menu.Item name='home' />
-          </Link>
-          { this.rightNavs() }
+            <Menu.Item
+              name='home'
+              id='home'
+              active={this.props.location.pathname === '/'}
+          />
+        </Link>
+          { this.rightNavItems() }
         </Menu>
       </div>
     )
@@ -50,4 +67,4 @@ const mapStateToProps = (state) => {
   return { user: state.user }
 }
 
-export default connect(mapStateToProps)(NavBar);
+export default withRouter(connect(mapStateToProps)(NavBar));

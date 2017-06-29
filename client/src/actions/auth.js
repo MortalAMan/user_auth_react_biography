@@ -1,17 +1,27 @@
-import Auth from 'j-toker';
+import axios from 'axios';
+import { setAuthHeaders } from '../utils/auth';
+import { setFlash } from './flash';
+
+const authErrors = (errors) => {
+  let message = '';
+  let msgType = 'error';
+  errors.forEach( error => {
+    message += `${error} `
+  });
+  return { type: 'SET_FLASH', message, msgType }
+}
 
 export const registerUser = (email, password, passwordConfirmation, history) => {
   return(dispatch) => {
-    Auth.emailSignUp({
-      email,
-      password,
-      password_confirmation: passwordConfirmation
-    }).then( user => {
-      dispatch({ type: 'LOGIN', user: user.data });
-      history.push('/');
-    }).fail( res => {
-      // TODO: handle errors client side
-      debugger
+    axios.post('/api/auth', { email, password, password_confirmation: passwordConfirmation })
+      .then( res => {
+        setAuthHeaders(res.headers);
+        dispatch({ type: 'LOGIN', user: res.data.data });
+        history.push('/');
+      })
+      .catch( res => {
+        const errors = res.data.errors || [res.reason]
+        dispatch(authErrors(errors));
     });
   }
 }
@@ -21,10 +31,30 @@ export const handleLogout = (history) => {
   // dispatch a POJO to log the user out of our redux state
   // push the user with history to the /login route
   return(dispatch) => {
-    Auth.signOut()
+    axios.delete('/api/auth/sign_out')
       .then( res => {
+        setAuthHeaders(res.headers);
         dispatch({ type: 'LOGOUT' });
         history.push('/login');
+      })
+      .catch( res => {
+        const errors = res.data.errors || [res.reason]
+        dispatch(authErrors(errors));
       });
     }
+}
+
+export const handleLogin = (email, password, history) => {
+  return(dispatch) => {
+    axios.post('/api/auth/sign_in', { email, password })
+      .then( res => {
+        setAuthHeaders(res.headers);
+        dispatch({ type: 'LOGIN', user: res.data.data });
+        history.push('/');
+      })
+      .catch( res => {
+        // TODO: handle errors for the client
+        console.log(res);
+      })
+  }
 }
